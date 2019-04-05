@@ -3,8 +3,7 @@ version: 2.1
 workflows:
   main:
     jobs:
-      - build-stable-0.54
-      - build-stable-0.53
+      - build-stable
       - build-nightly
   nightly-build:
     triggers:
@@ -17,27 +16,13 @@ workflows:
       - build-nightly
 
 jobs:
-  build-stable-0.54:
+  build-stable:
     machine: true
     steps:
       - checkout
       - run:
           name: "Build stable/latest image"
           command: docker build --file Dockerfile-0.54 -t fsteen/hugo:latest -t fsteen/hugo:0.54.0 -t fsteen/hugo:0.54 .
-      - deploy:
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker login -u  $DOCKER_USER -p $DOCKER_PASS
-              docker push fsteen/hugo
-            fi
-
-  build-stable-0.53:
-    machine: true
-    steps:
-      - checkout
-      - run:
-          name: "Build stable 0.53 image"
-          command: docker build --file Dockerfile-0.53 -t fsteen/hugo:0.53.0 -t fsteen/hugo:0.53 .
       - deploy:
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
