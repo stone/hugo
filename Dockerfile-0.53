@@ -1,0 +1,34 @@
+FROM alpine:3.9
+
+LABEL maintainer="adm@tty.se"
+
+ENV HUGO_VERSION=0.54.0
+ENV HUGO_DOWNLOAD_URL=https://github.com/spf13/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz
+
+RUN apk add --no-cache \
+		bash \
+		build-base \
+		ca-certificates \
+		curl \
+		git \
+		libcurl \
+		libc6-compat \
+		libxml2-dev \
+		libxslt-dev \
+		openssh \
+		rsync \
+		wget \
+        python \
+        py-pip && \
+        pip install awscli && \
+        apk -v --purge del py-pip
+
+RUN wget "$HUGO_DOWNLOAD_URL" && \
+	tar xzf hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz && \
+	mv hugo /usr/bin/hugo && \
+	rm hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz LICENSE README.md
+
+CMD ["hugo","--help"]
+
+EXPOSE 1313
+
