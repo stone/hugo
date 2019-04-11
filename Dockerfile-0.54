@@ -19,6 +19,7 @@ RUN apk add --no-cache \
 		rsync \
 		wget \
         python \
+        lftp \
         py-pip && \
         pip install awscli && \
         apk -v --purge del py-pip
