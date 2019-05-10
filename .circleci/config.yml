@@ -1,7 +1,48 @@
-version: 2.1
+---
+version: 2
+jobs:
 
+  build-stable:
+    docker:
+      - image: circleci/golang:1.12
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+              - "f0:5d:39:0e:92:c6:00:a1:3b:7f:a1:c4:c4:4e:8c:be"
+      - setup_remote_docker
+      - checkout
+      - run:
+          name: "Build stable/latest image"
+          command: |
+              docker build --file Dockerfile \
+              -t fsteen/hugo:latest $(.circleci/get_latest.sh) .
+      - deploy:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              if [[ ! -z "${DOCKER_USER}" ]]; then
+                docker login -u  $DOCKER_USER -p $DOCKER_PASS
+                docker push fsteen/hugo
+              fi
+            fi
+
+  build-nightly:
+    docker:
+      - image: circleci/golang:1.12
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run:
+          name: "Build Nightly"
+          command: docker build --file Dockerfile-nightly -t fsteen/hugo:nightly .
+      - run:
+          command: |
+            if [[ ! -z "${DOCKER_USER}" ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+              docker push fsteen/hugo:nightly
+            fi
 workflows:
-  main:
+  version: 2
+  build-workflow:
     jobs:
       - build-stable
       - build-nightly
@@ -13,32 +54,6 @@ workflows:
             branches:
               only: master
     jobs:
+      - build-stable
       - build-nightly
-
-jobs:
-  build-stable:
-    machine: true
-    steps:
-      - checkout
-      - run:
-          name: "Build stable/latest image"
-          command: docker build --file Dockerfile-0.54 -t fsteen/hugo:latest -t fsteen/hugo:0.54.0 -t fsteen/hugo:0.54 .
-      - deploy:
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker login -u  $DOCKER_USER -p $DOCKER_PASS
-              docker push fsteen/hugo
-            fi
-
-  build-nightly:
-    machine: true
-    steps:
-      - checkout
-      - run:
-          name: "Build Nightly"
-          command: docker build --file Dockerfile-nightly -t fsteen/hugo:nightly .
-      - run:
-          command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push fsteen/hugo:nightly
 
